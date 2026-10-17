@@ -47,7 +47,7 @@ def load_artifacts():
     except Exception as e:
         print(f"[ERROR] Failed to load model artifacts: {e}")
         return False
-
+load_artifacts()
 # WHO water quality safe limits (for advice generation)
 WHO_LIMITS = {
     'ph':               {'min': 6.5, 'max': 8.5, 'unit': '', 'name': 'pH'},
