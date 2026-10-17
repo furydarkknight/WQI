@@ -1,0 +1,88 @@
+{
+  "Logistic Regression": {
+    "accuracy": 52.9,
+    "precision": 0.4195,
+    "recall": 0.5391,
+    "f1_score": 0.4718,
+    "auc_roc": 0.5439,
+    "brier_score": 0.2489,
+    "confusion_matrix": [
+      [
+        209,
+        191
+      ],
+      [
+        118,
+        138
+      ]
+    ]
+  },
+  "Random Forest": {
+    "accuracy": 65.85,
+    "precision": 0.5762,
+    "recall": 0.4727,
+    "f1_score": 0.5193,
+    "auc_roc": 0.6639,
+    "brier_score": 0.2197,
+    "confusion_matrix": [
+      [
+        311,
+        89
+      ],
+      [
+        135,
+        121
+      ]
+    ]
+  },
+  "Gradient Boosting": {
+    "accuracy": 62.96,
+    "precision": 0.5247,
+    "recall": 0.5391,
+    "f1_score": 0.5318,
+    "auc_roc": 0.6606,
+    "brier_score": 0.229,
+    "confusion_matrix": [
+      [
+        275,
+        125
+      ],
+      [
+        118,
+        138
+      ]
+    ]
+  },
+  "XGBoost": {
+    "accuracy": 62.96,
+    "precision": 0.5272,
+    "recall": 0.4922,
+    "f1_score": 0.5091,
+    "auc_roc": 0.6506,
+    "brier_score": 0.2296,
+    "confusion_matrix": [
+      [
+        287,
+        113
+      ],
+      [
+        130,
+        126
+      ]
+    ]
+  },
+  "best_model_name": "Random Forest",
+  "cv_mean": 75.25,
+  "cv_std": 1.85,
+  "feature_importance": {
+    "ph": 0.1332,
+    "Sulfate": 0.1261,
+    "Hardness": 0.1165,
+    "Chloramines": 0.1147,
+    "Solids": 0.1144,
+    "Conductivity": 0.1011,
+    "Turbidity": 0.1005,
+    "Organic_carbon": 0.0976,
+    "Trihalomethanes": 0.096
+  }
+}

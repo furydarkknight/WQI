@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AquaPredict — AI-Powered Water Quality Prediction</title>
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue-dark:   #0f2942;
+      --blue-mid:    #1a4a7a;
+      --blue-light:  #2563eb;
+      --blue-pale:   #dbeafe;
+      --green:       #16a34a;
+      --green-light: #dcfce7;
+      --red:         #dc2626;
+      --red-light:   #fee2e2;
+      --yellow:      #d97706;
+      --yellow-light:#fef3c7;
+      --surface:     #f0f7ff;
+      --card:        #ffffff;
+      --border:      #cbd5e1;
+      --text:        #0f172a;
+      --muted:       #64748b;
+      --radius:      12px;
+      --shadow:      0 4px 24px rgba(15,41,66,.12);
+      --transition:  .25s ease;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--surface);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ─── Navbar ────────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--blue-dark);
+      box-shadow: 0 2px 20px rgba(0,0,0,.4);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 64px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      color: #fff; font-size: 1.3rem; font-weight: 700;
+      text-decoration: none;
+    }
+    .nav-logo .drop { font-size: 1.6rem; }
+    .nav-links { display: flex; gap: 8px; }
+    .nav-links a {
+      color: #94a3b8; text-decoration: none;
+      padding: 6px 14px; border-radius: 8px;
+      font-size: .9rem; transition: var(--transition);
+    }
+    .nav-links a:hover, .nav-links a.active {
+      background: rgba(37,99,235,.3); color: #fff;
+    }
+
+    /* ─── Hero ─────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-mid) 60%, #1e40af 100%);
+      padding: 80px 24px 60px;
+      text-align: center; color: #fff; position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800;
+      letter-spacing: -.02em; margin-bottom: 16px;
+    }
+    .hero h1 span { color: #60a5fa; }
+    .hero p {
+      max-width: 640px; margin: 0 auto 32px;
+      font-size: 1.1rem; opacity: .85; line-height: 1.7;
+    }
+    .hero-badges {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    }
+    .badge {
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 20px; padding: 6px 16px;
+      font-size: .82rem; color: #e2e8f0;
+    }
+
+    /* ─── Main layout ───────────────────────────────────────── */
+    main { max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px; }
+    .section-title {
+      font-size: 1.5rem; font-weight: 700;
+      color: var(--blue-dark); margin-bottom: 6px;
+    }
+    .section-sub { color: var(--muted); font-size: .95rem; margin-bottom: 28px; }
+
+    /* ─── Cards ─────────────────────────────────────────────── */
+    .card {
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid var(--border); box-shadow: var(--shadow);
+      padding: 28px;
+    }
+    .card-title {
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--blue-dark); margin-bottom: 18px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ─── Stats row ─────────────────────────────────────────── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px; margin-bottom: 40px;
+    }
+    .stat-card {
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 20px 24px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .stat-card .val {
+      font-size: 2rem; font-weight: 800; color: var(--blue-light);
+    }
+    .stat-card .lbl { font-size: .82rem; color: var(--muted); font-weight: 500; }
+
+    /* ─── Predictor form ────────────────────────────────────── */
+    .predictor-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 40px; margin-bottom: 40px;
+    }
+    @media(max-width:768px){ .predictor-grid { grid-template-columns: 1fr; } }
+
+    .param-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media(max-width:500px){ .param-grid { grid-template-columns: 1fr; } }
+
+    .param-group { display: flex; flex-direction: column; gap: 4px; }
+    .param-group label {
+      font-size: .8rem; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .04em;
+    }
+    .param-group .param-meta {
+      font-size: .72rem; color: #94a3b8;
+    }
+    .param-group input {
+      padding: 10px 12px; border-radius: 8px;
+      border: 1.5px solid var(--border);
+      font-size: .95rem; color: var(--text);
+      transition: var(--transition); background: #f8fafc;
+    }
+    .param-group input:focus {
+      outline: none; border-color: var(--blue-light);
+      background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+    }
+    .param-group input.warning {
+      border-color: var(--yellow); background: #fffbeb;
+    }
+    .param-group input.danger {
+      border-color: var(--red); background: #fef2f2;
+    }
+
+    .form-actions {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px;
+    }
+    .btn {
+      padding: 12px 24px; border-radius: 10px; border: none;
+      font-size: .95rem; font-weight: 600; cursor: pointer;
+      transition: var(--transition); display: flex; align-items: center; gap: 8px;
+    }
+    .btn-primary {
+      background: var(--blue-light); color: #fff;
+      box-shadow: 0 4px 14px rgba(37,99,235,.35);
+    }
+    .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+    .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      background: var(--surface); color: var(--blue-mid);
+      border: 1.5px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--blue-pale); }
+
+    /* ─── Sample buttons ────────────────────────────────────── */
+    .sample-btns {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+    }
+    .sample-btn {
+      padding: 6px 14px; font-size: .78rem; font-weight: 600;
+      border-radius: 20px; border: 1.5px solid var(--border);
+      background: #fff; cursor: pointer; transition: var(--transition);
+      color: var(--muted);
+    }
+    .sample-btn:hover {
+      background: var(--blue-pale); border-color: var(--blue-light);
+      color: var(--blue-light);
+    }
+
+    /* ─── Result panel ──────────────────────────────────────── */
+    .result-panel { position: relative; }
+    .result-placeholder {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 16px;
+      height: 320px; color: var(--muted); text-align: center;
+    }
+    .result-placeholder .drop-icon { font-size: 3rem; opacity: .35; }
+
+    .result-content { display: none; }
+    .result-content.visible { display: block; }
+
+    .verdict {
+      border-radius: 12px; padding: 24px;
+      text-align: center; margin-bottom: 20px;
+    }
+    .verdict.potable   { background: var(--green-light); border: 2px solid var(--green); }
+    .verdict.not-potable { background: var(--red-light); border: 2px solid var(--red); }
+
+    .verdict-icon { font-size: 2.8rem; margin-bottom: 8px; }
+    .verdict-label {
+      font-size: 1.8rem; font-weight: 800; margin-bottom: 4px;
+    }
+    .verdict.potable   .verdict-label { color: var(--green); }
+    .verdict.not-potable .verdict-label { color: var(--red); }
+    .verdict-conf { font-size: .9rem; color: var(--muted); }
+
+    /* Probability bar */
+    .prob-bar-wrap { margin: 16px 0; }
+    .prob-bar-label {
+      display: flex; justify-content: space-between;
+      font-size: .8rem; color: var(--muted); margin-bottom: 4px;
+    }
+    .prob-bar-track {
+      height: 12px; border-radius: 6px;
+      background: var(--red-light); overflow: hidden;
+      position: relative;
+    }
+    .prob-bar-fill {
+      height: 100%; background: var(--green);
+      border-radius: 6px; transition: width .6s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* WQI gauge */
+    .wqi-gauge {
+      display: flex; align-items: center; gap: 16px;
+      margin: 16px 0; padding: 16px;
+      background: var(--surface); border-radius: 10px;
+    }
+    .wqi-score {
+      font-size: 2.4rem; font-weight: 800; min-width: 64px; text-align: center;
+    }
+    .wqi-info { flex: 1; }
+    .wqi-label { font-size: 1rem; font-weight: 700; margin-bottom: 2px; }
+    .wqi-sub { font-size: .8rem; color: var(--muted); }
+
+    /* Advice list */
+    .advice-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .advice-list li {
+      padding: 10px 14px; border-radius: 8px;
+      font-size: .88rem; display: flex; align-items: flex-start; gap: 8px;
+    }
+    .advice-list li.info    { background: var(--blue-pale); color: var(--blue-mid); }
+    .advice-list li.warn    { background: var(--yellow-light); color: #92400e; }
+    .advice-list li.danger  { background: var(--red-light); color: #991b1b; }
+
+    /* ─── Tabs ──────────────────────────────────────────────── */
+    .tabs { margin-bottom: 40px; }
+    .tab-list {
+      display: flex; gap: 4px; border-bottom: 2px solid var(--border);
+      margin-bottom: 28px; overflow-x: auto;
+    }
+    .tab-btn {
+      padding: 10px 20px; border: none; background: transparent;
+      font-size: .9rem; font-weight: 600; color: var(--muted);
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      cursor: pointer; transition: var(--transition); white-space: nowrap;
+    }
+    .tab-btn.active { color: var(--blue-light); border-bottom-color: var(--blue-light); }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ─── Model comparison table ────────────────────────────── */
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    th {
+      background: var(--blue-dark); color: #fff;
+      padding: 12px 16px; text-align: left; font-weight: 600;
+    }
+    td { padding: 11px 16px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: var(--surface); }
+    .best-row td { font-weight: 700; background: var(--blue-pale) !important; }
+    .metric-bar {
+      display: inline-block; height: 8px; border-radius: 4px;
+      background: var(--blue-light); margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    /* ─── Feature importance chart ──────────────────────────── */
+    .feat-chart { display: flex; flex-direction: column; gap: 10px; }
+    .feat-row { display: flex; align-items: center; gap: 12px; }
+    .feat-name { font-size: .82rem; font-weight: 600; width: 160px; flex-shrink: 0; color: var(--text); }
+    .feat-bar-wrap { flex: 1; background: var(--surface); border-radius: 6px; height: 22px; }
+    .feat-bar {
+      height: 100%; border-radius: 6px;
+      background: linear-gradient(90deg, var(--blue-light), #7c3aed);
+      transition: width .6s ease;
+    }
+    .feat-val { font-size: .82rem; color: var(--muted); width: 50px; text-align: right; }
+
+    /* ─── About section ─────────────────────────────────────── */
+    .about-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media(max-width:640px){ .about-grid { grid-template-columns: 1fr; } }
+
+    .info-box {
+      background: var(--surface); border-radius: 10px;
+      border: 1px solid var(--border); padding: 20px;
+    }
+    .info-box h4 { font-size: .95rem; font-weight: 700; color: var(--blue-dark); margin-bottom: 10px; }
+    .info-box p, .info-box li { font-size: .88rem; color: var(--muted); line-height: 1.7; }
+    .info-box ul { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+    .info-box li::before { content: "• "; color: var(--blue-light); font-weight: 700; }
+
+    /* Parameters guide grid */
+    .params-guide {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
+      gap: 16px; margin-top: 24px;
+    }
+    .param-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px;
+    }
+    .param-card h5 { font-size: .9rem; font-weight: 700; color: var(--blue-dark); margin-bottom: 4px; }
+    .param-card .pc-unit {
+      font-size: .72rem; background: var(--blue-pale);
+      color: var(--blue-light); padding: 2px 8px;
+      border-radius: 10px; display: inline-block; margin-bottom: 8px;
+    }
+    .param-card p { font-size: .82rem; color: var(--muted); line-height: 1.6; }
+    .param-card .who {
+      margin-top: 8px; font-size: .78rem;
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      color: var(--green); border-radius: 6px; padding: 4px 10px;
+      display: inline-block;
+    }
+
+    /* ─── Loading spinner ───────────────────────────────────── */
+    .spinner {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 3px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      animation: spin .7s linear infinite; display: none;
+    }
+    .loading .spinner { display: block; }
+    .loading .btn-text { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Toast ─────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      background: #1e293b; color: #fff;
+      padding: 14px 20px; border-radius: 10px;
+      font-size: .9rem; box-shadow: 0 8px 30px rgba(0,0,0,.3);
+      transform: translateY(100px); opacity: 0;
+      transition: .3s ease; max-width: 320px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.error { background: var(--red); }
+    .toast.success { background: var(--green); }
+
+    /* ─── Confusion matrix ──────────────────────────────────── */
+    .cm-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+      max-width: 240px; margin: 12px auto;
+    }
+    .cm-cell {
+      padding: 16px; border-radius: 6px;
+      text-align: center; font-size: .85rem; font-weight: 700;
+    }
+    .cm-tp { background: #dcfce7; color: #166534; }
+    .cm-fp { background: #fee2e2; color: #991b1b; }
+    .cm-fn { background: #fef3c7; color: #92400e; }
+    .cm-tn { background: #dbeafe; color: #1e40af; }
+    .cm-label { font-size: .72rem; font-weight: 400; display: block; margin-top: 2px; }
+
+    /* ─── Footer ────────────────────────────────────────────── */
+    footer {
+      background: var(--blue-dark); color: #94a3b8;
+      text-align: center; padding: 28px 24px;
+      font-size: .85rem; line-height: 1.8;
+    }
+    footer a { color: #60a5fa; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ─── API status pill ───────────────────────────────────── */
+    .api-status {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 20px; font-size: .78rem; font-weight: 600;
+    }
+    .api-status.online  { background: #dcfce7; color: #166534; }
+    .api-status.offline { background: #fee2e2; color: #991b1b; }
+    .api-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: currentColor; animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .4; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ──────────── NAV ──────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <span class="drop">💧</span> AquaPredict
+    </a>
+    <div class="nav-links">
+      <a href="#predict" class="active">Predict</a>
+      <a href="#analytics">Analytics</a>
+      <a href="#parameters">Parameters</a>
+      <a href="#about">About</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ──────────── HERO ─────────────────────── -->
+<section class="hero">
+  <h1>AI-Powered <span>Water Quality</span><br>Prediction System</h1>
+  <p>
+    Enter physicochemical parameters to predict whether water is safe to drink.
+    Powered by ensemble ML models trained on 3,276 real water samples with SMOTE balancing.
+  </p>
+  <div class="hero-badges">
+    <span class="badge">📄 Scientific Reports 2026</span>
+    <span class="badge">🤖 XGBoost + Random Forest</span>
+    <span class="badge">📊 SMOTE Balanced Dataset</span>
+    <span class="badge">🏆 WHO Standards</span>
+    <span id="apiStatusBadge" class="badge">⚡ Checking API...</span>
+  </div>
+</section>
+
+<!-- ──────────── MAIN ─────────────────────── -->
+<main>
+
+  <!-- ── Stats row ── -->
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card">
+      <span class="val">3,276</span>
+      <span class="lbl">Water Samples Trained</span>
+    </div>
+    <div class="stat-card">
+      <span class="val" id="statAccuracy">—</span>
+      <span class="lbl">Best Model Accuracy</span>
+    </div>
+    <div class="stat-card">
+      <span class="val" id="statAUC">—</span>
+      <span class="lbl">AUC-ROC Score</span>
+    </div>
+    <div class="stat-card">
+      <span class="val">9</span>
+      <span class="lbl">Physicochemical Features</span>
+    </div>
+    <div class="stat-card">
+      <span class="val">10-Fold</span>
+      <span class="lbl">Cross Validation</span>
+    </div>
+  </div>
+
+  <!-- ── Predict section ── -->
+  <section id="predict">
+    <h2 class="section-title">🔬 Water Quality Predictor</h2>
+    <p class="section-sub">Enter the water sample parameters below. Leave fields blank for auto-imputation via mean values.</p>
+
+    <div class="predictor-grid">
+      <!-- Left: Form -->
+      <div class="card">
+        <div class="card-title">📋 Input Parameters</div>
+
+        <div class="sample-btns">
+          <span style="font-size:.8rem;color:var(--muted);align-self:center;margin-right:4px;">Load sample:</span>
+          <button class="sample-btn" onclick="loadSample(0)">Clean Tap Water</button>
+          <button class="sample-btn" onclick="loadSample(1)">Industrial Runoff</button>
+          <button class="sample-btn" onclick="loadSample(2)">Spring Water</button>
+        </div>
+
+        <div class="param-grid" id="paramGrid">
+          <!-- Injected by JS -->
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" id="predictBtn" onclick="predict()">
+            <span class="spinner" id="btnSpinner"></span>
+            <span class="btn-text">Analyze Water Quality</span>
+          </button>
+          <button class="btn btn-secondary" onclick="clearForm()">Clear</button>
+        </div>
+      </div>
+
+      <!-- Right: Results -->
+      <div class="card result-panel">
+        <div class="card-title">📊 Prediction Results</div>
+
+        <div class="result-placeholder" id="resultPlaceholder">
+          <div class="drop-icon">💧</div>
+          <p>Enter water parameters and click<br><strong>Analyze Water Quality</strong> to get results.</p>
+        </div>
+
+        <div class="result-content" id="resultContent">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Analytics tabs ── -->
+  <section id="analytics" style="margin-bottom:40px;">
+    <h2 class="section-title">📈 Model Analytics</h2>
+    <p class="section-sub">Performance metrics of all four ML models trained on the water potability dataset.</p>
+
+    <div class="card tabs">
+      <div class="tab-list">
+        <button class="tab-btn active" onclick="switchTab('comparison')">Model Comparison</button>
+        <button class="tab-btn" onclick="switchTab('features')">Feature Importance</button>
+        <button class="tab-btn" onclick="switchTab('confusion')">Confusion Matrix</button>
+        <button class="tab-btn" onclick="switchTab('research')">Research Summary</button>
+      </div>
+
+      <!-- Tab: Comparison -->
+      <div class="tab-panel active" id="tab-comparison">
+        <div class="table-wrap">
+          <table id="compTable">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Accuracy (%)</th>
+                <th>AUC-ROC</th>
+                <th>F1-Score</th>
+                <th>Precision</th>
+                <th>Recall</th>
+                <th>Brier Score</th>
+              </tr>
+            </thead>
+            <tbody id="compTableBody">
+              <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;">Loading model data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:12px;">
+          * Highlighted row = best model used for predictions. Dataset: Water Potability (3,276 samples) with SMOTE balancing. 80/20 train-test split.
+        </p>
+      </div>
+
+      <!-- Tab: Features -->
+      <div class="tab-panel" id="tab-features">
+        <p style="font-size:.9rem;color:var(--muted);margin-bottom:20px;">
+          Feature importance shows which parameters the model relies on most for its predictions.
+          Higher values indicate stronger predictive power.
+        </p>
+        <div class="feat-chart" id="featChart">
+          <p style="color:var(--muted);">Loading feature data...</p>
+        </div>
+      </div>
+
+      <!-- Tab: Confusion Matrix -->
+      <div class="tab-panel" id="tab-confusion">
+        <p style="font-size:.9rem;color:var(--muted);margin-bottom:20px;">
+          Confusion matrix for the best-performing model on the 20% test set (656 samples).
+        </p>
+        <div style="display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start;">
+          <div>
+            <div style="text-align:center;font-size:.85rem;font-weight:600;color:var(--muted);margin-bottom:8px;">
+              Predicted →
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+              <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.85rem;font-weight:600;color:var(--muted);">Actual ↓</div>
+              <div>
+                <div style="display:flex;gap:4px;margin-bottom:4px;">
+                  <div style="width:60px;"></div>
+                  <div style="width:100px;text-align:center;font-size:.78rem;font-weight:600;color:var(--muted);">Not Potable</div>
+                  <div style="width:100px;text-align:center;font-size:.78rem;font-weight:600;color:var(--muted);">Potable</div>
+                </div>
+                <div style="display:flex;gap:4px;margin-bottom:4px;align-items:center;">
+                  <div style="width:60px;font-size:.78rem;font-weight:600;color:var(--muted);">Not Potable</div>
+                  <div class="cm-cell cm-tn" id="cmTN" style="width:100px;">—<span class="cm-label">True Neg</span></div>
+                  <div class="cm-cell cm-fp" id="cmFP" style="width:100px;">—<span class="cm-label">False Pos</span></div>
+                </div>
+                <div style="display:flex;gap:4px;align-items:center;">
+                  <div style="width:60px;font-size:.78rem;font-weight:600;color:var(--muted);">Potable</div>
+                  <div class="cm-cell cm-fn" id="cmFN" style="width:100px;">—<span class="cm-label">False Neg</span></div>
+                  <div class="cm-cell cm-tp" id="cmTP" style="width:100px;">—<span class="cm-label">True Pos</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="flex:1;min-width:200px;">
+            <div class="info-box">
+              <h4>How to read this</h4>
+              <ul>
+                <li><strong>True Negative (TN):</strong> Correctly predicted Non-potable</li>
+                <li><strong>True Positive (TP):</strong> Correctly predicted Potable</li>
+                <li><strong>False Positive (FP):</strong> Non-potable classified as Potable (dangerous!)</li>
+                <li><strong>False Negative (FN):</strong> Potable classified as Non-potable</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Research -->
+      <div class="tab-panel" id="tab-research">
+        <div class="about-grid">
+          <div class="info-box">
+            <h4>📄 Research Paper</h4>
+            <p>"Data driven water quality assessment using machine learning and synthetic data generation"</p>
+            <p style="margin-top:8px;"><strong>Journal:</strong> Scientific Reports (2026)</p>
+            <p><strong>DOI:</strong> <a href="https://doi.org/10.1038/s41598-026-54560-7" target="_blank" style="color:var(--blue-light);">10.1038/s41598-026-54560-7</a></p>
+          </div>
+          <div class="info-box">
+            <h4>🏆 Key Findings</h4>
+            <ul>
+              <li>XGBoost & GB achieved 99.47% on SMOTE-balanced data</li>
+              <li>SMOTE outperformed MAHAKIL and GAN for oversampling</li>
+              <li>SMOTE MMD score of 0.0067 (excellent synthetic data quality)</li>
+              <li>10-fold cross-validation used for robustness</li>
+              <li>3 datasets evaluated across 4 ML models</li>
+            </ul>
+          </div>
+          <div class="info-box">
+            <h4>⚙️ Methodology</h4>
+            <ul>
+              <li>Min-Max normalization (Eq. 1 from paper)</li>
+              <li>Mean imputation for missing values</li>
+              <li>80/20 stratified train-test split</li>
+              <li>SMOTE applied to training set only (prevents data leakage)</li>
+              <li>10-fold cross-validation on training set</li>
+            </ul>
+          </div>
+          <div class="info-box">
+            <h4>📊 Dataset Info</h4>
+            <ul>
+              <li>3,276 total water samples (Kaggle)</li>
+              <li>1,998 Non-potable | 1,278 Potable</li>
+              <li>9 physicochemical features</li>
+              <li>Missing values in pH, Sulfate, Trihalomethanes</li>
+              <li>Mean imputation used for missing values</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Parameters guide ── -->
+  <section id="parameters" style="margin-bottom:40px;">
+    <h2 class="section-title">💡 Parameters Guide</h2>
+    <p class="section-sub">WHO safe drinking water limits and descriptions for each parameter.</p>
+
+    <div class="params-guide" id="paramsGuide">
+      <!-- Filled by JS -->
+      <p style="color:var(--muted);">Loading parameter information...</p>
+    </div>
+  </section>
+
+  <!-- ── About ── -->
+  <section id="about">
+    <h2 class="section-title">ℹ️ About AquaPredict</h2>
+    <p class="section-sub">Science-backed water quality prediction for public health.</p>
+    <div class="card">
+      <div class="about-grid">
+        <div>
+          <h4 style="font-size:1rem;font-weight:700;color:var(--blue-dark);margin-bottom:12px;">What is AquaPredict?</h4>
+          <p style="color:var(--muted);font-size:.9rem;line-height:1.8;">
+            AquaPredict is a machine learning-powered web application that predicts water potability 
+            based on physicochemical parameters. It implements the methodology from peer-reviewed research 
+            published in <em>Scientific Reports (2026)</em>, using an ensemble of Random Forest, XGBoost, 
+            Gradient Boosting, and Logistic Regression models trained on real-world water quality data.
+          </p>
+          <p style="color:var(--muted);font-size:.9rem;line-height:1.8;margin-top:12px;">
+            The model was trained on 3,276 water samples from the Kaggle Water Potability dataset, 
+            with SMOTE oversampling to address class imbalance (1,998 non-potable vs 1,278 potable samples),
+            following the exact methodology proven to achieve 99.47% accuracy in the reference study.
+          </p>
+        </div>
+        <div>
+          <h4 style="font-size:1rem;font-weight:700;color:var(--blue-dark);margin-bottom:12px;">Important Disclaimer</h4>
+          <div style="background:var(--yellow-light);border:1px solid #fde68a;border-radius:10px;padding:16px;">
+            <p style="font-size:.88rem;color:#92400e;line-height:1.7;">
+              ⚠️ <strong>This tool is for educational and research purposes only.</strong>
+              Predictions should NOT replace certified laboratory water quality testing.
+              Always consult certified water testing authorities before making decisions 
+              about water consumption. WHO standards and EPA guidelines should be followed 
+              for official water quality determination.
+            </p>
+          </div>
+          <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;">
+            <a href="https://doi.org/10.1038/s41598-026-54560-7" target="_blank" 
+               style="font-size:.82rem;color:var(--blue-light);text-decoration:none;
+                      background:var(--blue-pale);padding:6px 14px;border-radius:6px;
+                      border:1px solid var(--blue-light);">
+              📄 Research Paper
+            </a>
+            <a href="https://www.kaggle.com/datasets/adityakadiwal/water-potability" target="_blank"
+               style="font-size:.82rem;color:var(--blue-light);text-decoration:none;
+                      background:var(--blue-pale);padding:6px 14px;border-radius:6px;
+                      border:1px solid var(--blue-light);">
+              📊 Dataset Source
+            </a>
+            <a href="https://www.who.int/news-room/fact-sheets/detail/drinking-water" target="_blank"
+               style="font-size:.82rem;color:var(--blue-light);text-decoration:none;
+                      background:var(--blue-pale);padding:6px 14px;border-radius:6px;
+                      border:1px solid var(--blue-light);">
+              🌊 WHO Water Standards
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ──────────── FOOTER ───────────────────── -->
+<footer>
+  <div>
+    <strong>AquaPredict</strong> — AI-Powered Water Quality Prediction System
+  </div>
+  <div style="margin-top:4px;">
+    Based on: <a href="https://doi.org/10.1038/s41598-026-54560-7" target="_blank">Scientific Reports 2026 — Data driven water quality assessment using ML</a>
+  </div>
+  <div style="margin-top:4px;">
+    Dataset: <a href="https://www.kaggle.com/datasets/adityakadiwal/water-potability" target="_blank">Kaggle Water Potability</a> |
+    WHO Standards | For educational use only
+  </div>
+</footer>
+
+<!-- ──────────── TOAST ────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<!-- ──────────── SCRIPT ───────────────────── -->
+<script>
+  const API_BASE = 'http://localhost:5000/api';
+
+  // Parameter metadata
+  const PARAMS = [
+    { key:'ph',              label:'pH',                     unit:'',       placeholder:'6.5 – 8.5',  step:'0.01', min:0, max:14 },
+    { key:'Hardness',        label:'Hardness',               unit:'mg/L',   placeholder:'47 – 323',   step:'0.1',  min:0, max:600 },
+    { key:'Solids',          label:'Total Dissolved Solids', unit:'ppm',    placeholder:'320 – 61227',step:'1',    min:0, max:70000 },
+    { key:'Chloramines',     label:'Chloramines',            unit:'ppm',    placeholder:'0.35 – 13.1',step:'0.01', min:0, max:15 },
+    { key:'Sulfate',         label:'Sulfate',                unit:'mg/L',   placeholder:'129 – 481',  step:'0.1',  min:0, max:600 },
+    { key:'Conductivity',    label:'Conductivity',           unit:'µS/cm',  placeholder:'181 – 753',  step:'0.1',  min:0, max:1000 },
+    { key:'Organic_carbon',  label:'Organic Carbon',         unit:'ppm',    placeholder:'2.2 – 28.3', step:'0.01', min:0, max:40 },
+    { key:'Trihalomethanes', label:'Trihalomethanes',        unit:'µg/L',   placeholder:'10.7 – 124', step:'0.1',  min:0, max:150 },
+    { key:'Turbidity',       label:'Turbidity',              unit:'NTU',    placeholder:'1.45 – 6.74',step:'0.01', min:0, max:10 },
+  ];
+
+  // WHO warning limits
+  const WHO = {
+    ph:             { min:6.5, max:8.5 },
+    Hardness:       { min:0,   max:500 },
+    Solids:         { min:0,   max:500 },
+    Chloramines:    { min:0,   max:4.0 },
+    Sulfate:        { min:0,   max:250 },
+    Conductivity:   { min:0,   max:400 },
+    Organic_carbon: { min:0,   max:2 },
+    Trihalomethanes:{ min:0,   max:80 },
+    Turbidity:      { min:0,   max:5 },
+  };
+
+  let samples = [];
+  let modelInfo = null;
+
+  // ── Build input form ──
+  function buildForm() {
+    const grid = document.getElementById('paramGrid');
+    grid.innerHTML = PARAMS.map(p => `
+      <div class="param-group">
+        <label>${p.label} ${p.unit ? `<span style="font-weight:400;text-transform:none">(${p.unit})</span>` : ''}</label>
+        <input
+          type="number" id="inp_${p.key}"
+          placeholder="${p.placeholder}"
+          step="${p.step}" min="${p.min}" max="${p.max}"
+          oninput="checkLimit(this,'${p.key}')"
+        />
+        <span class="param-meta" id="meta_${p.key}"></span>
+      </div>
+    `).join('');
+  }
+
+  function checkLimit(el, key) {
+    const val = parseFloat(el.value);
+    const lim = WHO[key];
+    const meta = document.getElementById('meta_' + key);
+    el.classList.remove('warning','danger');
+    meta.textContent = '';
+    if (isNaN(val) || !lim) return;
+    if (key === 'ph' && val < lim.min) {
+      el.classList.add('danger');
+      meta.textContent = 'Below WHO min ' + lim.min;
+      meta.style.color = 'var(--red)';
+    } else if (val > lim.max) {
+      el.classList.add('warning');
+      meta.textContent = 'Exceeds WHO limit ' + lim.max;
+      meta.style.color = 'var(--yellow)';
+    } else {
+      meta.textContent = 'Within safe range';
+      meta.style.color = 'var(--green)';
+    }
+  }
+
+  function clearForm() {
+    PARAMS.forEach(p => {
+      const el = document.getElementById('inp_' + p.key);
+      el.value = '';
+      el.classList.remove('warning','danger');
+      document.getElementById('meta_' + p.key).textContent = '';
+    });
+    document.getElementById('resultPlaceholder').style.display = 'flex';
+    document.getElementById('resultContent').classList.remove('visible');
+  }
+
+  function loadSample(idx) {
+    if (!samples.length) { showToast('Sample data not loaded yet', 'error'); return; }
+    const s = samples[idx];
+    PARAMS.forEach(p => {
+      const el = document.getElementById('inp_' + p.key);
+      el.value = s[p.key] !== undefined ? s[p.key] : '';
+      checkLimit(el, p.key);
+    });
+    showToast('Loaded: ' + s.name, 'success');
+  }
+
+  // ── Predict ──
+  async function predict() {
+    const btn = document.getElementById('predictBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    const payload = {};
+    PARAMS.forEach(p => {
+      const v = document.getElementById('inp_' + p.key).value;
+      payload[p.key] = v !== '' ? parseFloat(v) : null;
+    });
+
+    try {
+      const res = await fetch(API_BASE + '/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error('API error ' + res.status);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      renderResult(data);
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+      console.error(err);
+    } finally {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    }
+  }
+
+  function renderResult(d) {
+    document.getElementById('resultPlaceholder').style.display = 'none';
+    const rc = document.getElementById('resultContent');
+    rc.classList.add('visible');
+
+    const isPotable = d.prediction === 1;
+    const wqi = d.wqi_category || {};
+    const adviceHTML = d.advice.map((a,i) => {
+      const cls = isPotable ? (i===0?'info':'info') : 'danger';
+      const icon = isPotable ? '✅' : '⚠️';
+      return `<li class="${cls}">${icon} ${a}</li>`;
+    }).join('');
+    const warningsHTML = d.parameter_warnings.map(w =>
+      `<li class="warn">⚡ ${w}</li>`
+    ).join('');
+
+    rc.innerHTML = `
+      <div class="verdict ${isPotable ? 'potable' : 'not-potable'}">
+        <div class="verdict-icon">${isPotable ? '✅' : '🚫'}</div>
+        <div class="verdict-label">${d.label}</div>
+        <div class="verdict-conf">Confidence: <strong>${d.confidence}%</strong> | Model: ${d.model_used}</div>
+      </div>
+
+      <div class="wqi-gauge">
+        <div class="wqi-score" style="color:${wqi.color || '#64748b'}">${d.wqi_score}</div>
+        <div class="wqi-info">
+          <div class="wqi-label" style="color:${wqi.color || '#64748b'}">${wqi.label || 'Unknown'}</div>
+          <div class="wqi-sub">Water Quality Index (Potability probability score)</div>
+        </div>
+      </div>
+
+      <div class="prob-bar-wrap">
+        <div class="prob-bar-label">
+          <span>Not Potable (${d.probability_not_potable}%)</span>
+          <span>Potable (${d.probability_potable}%)</span>
+        </div>
+        <div class="prob-bar-track">
+          <div class="prob-bar-fill" style="width:${d.probability_potable}%"></div>
+        </div>
+      </div>
+
+      <ul class="advice-list" style="margin-top:16px;">
+        ${adviceHTML}
+        ${warningsHTML}
+      </ul>
+
+      <div style="margin-top:16px;padding:12px;background:var(--surface);border-radius:8px;font-size:.8rem;color:var(--muted);">
+        <strong>Probabilities:</strong>
+        Potable: <strong>${d.probability_potable}%</strong> |
+        Not Potable: <strong>${d.probability_not_potable}%</strong>
+      </div>
+    `;
+  }
+
+  // ── Tabs ──
+  function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach((b,i) => {
+      const panels = ['comparison','features','confusion','research'];
+      b.classList.toggle('active', panels[i] === name);
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.classList.toggle('active', p.id === 'tab-' + name);
+    });
+  }
+
+  // ── Load model info ──
+  async function loadModelInfo() {
+    try {
+      const res = await fetch(API_BASE + '/model-info');
+      if (!res.ok) return;
+      modelInfo = await res.json();
+
+      // Update stats
+      const best = modelInfo.model_comparison?.[modelInfo.best_model];
+      if (best) {
+        document.getElementById('statAccuracy').textContent = best.accuracy + '%';
+        document.getElementById('statAUC').textContent = best.auc_roc;
+      }
+
+      // Build comparison table
+      const tbody = document.getElementById('compTableBody');
+      const comps = modelInfo.model_comparison || {};
+      tbody.innerHTML = Object.entries(comps).map(([name, m]) => {
+        const isBest = name === modelInfo.best_model;
+        return `<tr class="${isBest ? 'best-row' : ''}">
+          <td>${isBest ? '🏆 ' : ''}${name}</td>
+          <td><span class="metric-bar" style="width:${m.accuracy}px"></span>${m.accuracy}%</td>
+          <td>${m.auc_roc}</td>
+          <td>${m.f1_score}</td>
+          <td>${m.precision}</td>
+          <td>${m.recall}</td>
+          <td>${m.brier_score}</td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted)">No data</td></tr>';
+
+      // Feature importance chart
+      const feats = modelInfo.feature_importance || {};
+      const maxVal = Math.max(...Object.values(feats));
+      const fc = document.getElementById('featChart');
+      fc.innerHTML = Object.entries(feats).map(([name, val]) => {
+        const pct = maxVal > 0 ? (val / maxVal * 100).toFixed(1) : 0;
+        const displayName = name.replace(/_/g, ' ');
+        return `<div class="feat-row">
+          <div class="feat-name">${displayName}</div>
+          <div class="feat-bar-wrap">
+            <div class="feat-bar" style="width:${pct}%"></div>
+          </div>
+          <div class="feat-val">${(val*100).toFixed(1)}%</div>
+        </div>`;
+      }).join('') || '<p style="color:var(--muted)">Feature importance not available</p>';
+
+      // Confusion matrix
+      if (best?.confusion_matrix) {
+        const cm = best.confusion_matrix;
+        // cm is [[TN, FP], [FN, TP]]
+        document.getElementById('cmTN').childNodes[0].textContent = cm[0][0];
+        document.getElementById('cmFP').childNodes[0].textContent = cm[0][1];
+        document.getElementById('cmFN').childNodes[0].textContent = cm[1][0];
+        document.getElementById('cmTP').childNodes[0].textContent = cm[1][1];
+      }
+
+    } catch(e) {
+      console.warn('Model info unavailable:', e);
+    }
+  }
+
+  // ── Load sample data ──
+  async function loadSampleData() {
+    try {
+      const res = await fetch(API_BASE + '/sample-data');
+      if (res.ok) samples = await res.json();
+    } catch(e) { console.warn('Samples unavailable'); }
+  }
+
+  // ── Load parameters guide ──
+  async function loadParamsGuide() {
+    try {
+      const res = await fetch(API_BASE + '/parameters-info');
+      if (!res.ok) return;
+      const info = await res.json();
+      const guide = document.getElementById('paramsGuide');
+      guide.innerHTML = Object.entries(info).map(([key, p]) => `
+        <div class="param-card">
+          <h5>${p.name}</h5>
+          <span class="pc-unit">${p.unit ? p.unit : 'dimensionless'} | WHO max: ${p.who_max}</span>
+          <p>${p.description}</p>
+          <p style="margin-top:6px;font-size:.8rem;"><strong>Typical range:</strong> ${p.typical_range}</p>
+          <p style="font-size:.8rem;"><strong>Health impact:</strong> ${p.impact}</p>
+          <span class="who">WHO limit: ${p.who_min === 0 && p.who_max > 0 ? '< '+p.who_max : p.who_min+' – '+p.who_max} ${p.unit}</span>
+        </div>
+      `).join('');
+    } catch(e) { console.warn('Params info unavailable'); }
+  }
+
+  // ── Check API health ──
+  async function checkHealth() {
+    const badge = document.getElementById('apiStatusBadge');
+    try {
+      const res = await fetch(API_BASE + '/health', { signal: AbortSignal.timeout(3000) });
+      if (res.ok) {
+        const data = await res.json();
+        badge.textContent = data.model_loaded ? '🟢 API Online' : '🟡 API (no model)';
+        await Promise.all([loadModelInfo(), loadSampleData(), loadParamsGuide()]);
+      } else {
+        throw new Error('API offline');
+      }
+    } catch(e) {
+      badge.textContent = '🔴 API Offline';
+      badge.style.background = 'rgba(220,38,38,.2)';
+      badge.style.borderColor = 'rgba(220,38,38,.4)';
+      showToast('Backend API is offline. Start the Flask server to enable predictions.', 'error');
+    }
+  }
+
+  // ── Toast ──
+  function showToast(msg, type='info') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 4000);
+  }
+
+  // ── Init ──
+  document.addEventListener('DOMContentLoaded', () => {
+    buildForm();
+    checkHealth();
+    // Smooth scroll for nav links
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', e => {
+        document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+        e.target.classList.add('active');
+      });
+    });
+    // Keyboard shortcut: Enter to predict
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.ctrlKey) predict();
+    });
+  });
+</script>
+</body>
+</html>
